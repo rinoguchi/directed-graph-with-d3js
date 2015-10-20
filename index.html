@@ -3,20 +3,12 @@
 <head>
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>diredted graph with d3js</title>
+  <title>directed graph with d3js</title>
   <link rel="stylesheet" href="vendor/kube500/css/kube.css" />
+  <link rel="stylesheet" href="css/common.css" />
   <style>
-    .content {
-      max-width: 800px;
-      margin: auto;
-      margin-bottom: 64px;
-      padding: 0;
-    }
-
-    /** override kube.css */
-    .forms p {
-      margin-bottom: 0px;
-      color: gray;
+    #draw-area {
+      display: none;
     }
 
     /** forceLayout*/
@@ -45,12 +37,11 @@
 </head>
 <body>
   <div class="wrap content">
-    <h1>Diredted Graph With d3js</h1>
+    <h1>Directed Graph With d3js</h1>
     <form class="forms">
       <row>
         <column cols="10">
-          <label>Nodes</label>
-          <p class="small">id, label</p>
+          <label>Nodes<span class="desc">id, label</span></label>
           <textarea id="nodes" rows="5">
 01, aaaa
 02, bbbb
@@ -59,8 +50,7 @@
 05, eeee</textarea>
         </column>
         <column cols="10">
-          <label>Links</label>
-          <p class="small">souce-id, target-id, line-type (optional. default: solid)</p>
+          <label>Links<span class="desc">souce-id, target-id, line-type (optional. default: solid)</span></label>
           <textarea id="links" rows="5">
 01, 02, solid
 01, 03, dashed
@@ -73,9 +63,29 @@
         </column>
       </row>
       <row>
+        <column cols="5">
+          <label>Link Distance <span class="desc">px</span></label>
+          <input type="text" id="link-distance" value="100"/>
+        </column>
+        <column cols="5">
+          <label>Charge</label>
+          <input type="text" id="charge" value="-300"/>
+        </column>
+        <column cols="5">
+          <label>friction<span class="desc">from 0 to 1 </span></label>
+          <input type="text" id="friction" value="0.9"/>
+        </column>
+        <column cols="5">
+          <label>gravity</label>
+          <input type="text" id="gravity" value="0.2"/>
+        </column>
+        
+      </row>
+      <row>
         <button type="primary" onclick="draw(); return false;" round>Draw</button>
       </row>
     </form>
+    <div id="draw-area" class="area"></div>
   </div>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js' charset='utf-8'></script>
   <script>
@@ -110,19 +120,26 @@
         }
       }
 
-      var width = window.innerWidth,
-          height = 500;
+      var width = 900;
+      var height = 500;
+      var linkdistance = document.getElementById("link-distance").value-0;
+      var charge = document.getElementById("charge").value-0;
+      var friction = document.getElementById("friction").value-0;
+      var gravity = document.getElementById("gravity").value-0;
 
       force = d3.layout.force()
           .size([width, height])
           .nodes(d3.values(nodes))
-          .charge(function(n) {return -(n.r + 300);})
+          .charge(charge)
+          .friction(friction)
+          .gravity(gravity)
           .links(links)
-          .linkDistance(function(l) { return l.target.r + l.source.r + 50;})
+          .linkDistance(function(l) { return l.target.r + l.source.r + linkdistance;})
           .on('tick', tick)
           .start();
 
-      var svg = d3.select('body').append('svg')
+      var svg = d3.select('#draw-area').style('display', 'block')
+          .append('svg')
           .attr('width', width)
           .attr('height', height);
 
@@ -137,7 +154,7 @@
           .attr('markerHeight', 10)
           .attr('orient', 'auto')
         .append('path')
-          .attr('d', 'M0,-5L10,0L0,5'); //arrow
+          .attr('d', 'M0,-5L10,0L0,5'); //
 
       var path = svg.append('g').selectAll('path')
           .data(force.links())
