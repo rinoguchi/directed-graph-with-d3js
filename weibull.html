@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang='ja'>
 <head>
+  <!-- common -->
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Weibull Distribution Fitting</title>
-  <link rel="stylesheet" href="vendor/kube500/css/kube.css" />
+  <link rel="stylesheet" href="bower_components/kube500/css/kube.css" />
   <link rel="stylesheet" href="css/common.css" />
-  <link href="./vendor/c3-0.4.10/c3.css" rel="stylesheet" type="text/css">
+
+  <!-- this page -->
+  <link href="bower_components/c3/c3.css" rel="stylesheet" type="text/css">
+
+  <title>Weibull Distribution Fitting</title>
   <style>
   #result {
     display: none;
@@ -20,160 +24,90 @@
   #draw-area {
     background-color: white;
   }
-
   </style>
-</head>
-<body>
-  <div class="wrap content">
-    <h1>Weibull Distribution Fitting</h1>
-    <form class="forms">
-      <row>
-        <column cols="12">
-          <label>Raw Datas<span class="desc">( CSV or TSV format )</span></label>
-          <textarea id="rawdata" rows="5" required>
-0.1, 0.19
-0.2, 0.28
-0.3, 0.44
-0.4, 0.78
-0.5, 0.67
-0.6, 0.73
-0.7, 0.65
-0.8, 0.64
-0.9, 0.60
-1.0, 0.50
-1.3, 0.30
-1.5, 0.05</textarea>
-      </row>
-      <fieldset>
-        <legend>A <span class="desc">( shape parameter )</span></legend>
-        <row>
-          <column cols="5">
-            <label>start <span class="desc">( >0 )</span></label>
-            <input type="text" id="a-start" value="0.1" pattern="^[0-9\.]*$" required/>
-          </column>
-          <column cols="5">
-            <label>end <span class="desc">( >0 )</span></label>
-            <input type="text" id="a-end" value="5" pattern="^[0-9\.]*$" required/>
-          </column>
-          <column cols="5">
-            <label>step <span class="desc">( >0 )</span></label>
-            <input type="text" id="a-step" value="0.01" pattern="^[0-9\.]*$" required/>
-          </column>
-        </row>
-      </fieldset>
-      <fieldset>
-        <legend>B <span class="desc">( scale parameter )</span></legend>
-        <row>
-          <column cols="5">
-            <label>start <span class="desc">( >0 )</span></label>
-            <input type="text" id="b-start" value="0.1" pattern="^[0-9\.]*$" required/>
-          </column>
-          <column cols="5">
-            <label>end <span class="desc">( >0 )</span></label>
-            <input type="text" id="b-end" value="5" pattern="^[0-9\.]*$" required/>
-          </column>
-          <column cols="5">
-            <label>step <span class="desc">( >0 )</span></label>
-            <input type="text" id="b-step" value="0.01" pattern="^[0-9\.]*$" required/>
-          </column>
-        </row>
-      </fieldset>
-      <row>
-        <column cols="2">
-          <button type="primary" onclick="main.calc(); return false;" round>Calculate</button>
-        </column>
-        <column cols="7">
-          <div class="alert alert-error" >aaa</div>
-        </column>
-      </row>
 
-    </form>
-    <div id="result">
-      <fieldset id="value-area">
-        <row>
-          <column cols="5">
-            <label>a <span class="desc">( shape parameter )</span></label>
-            <input type="text" id="a" disabled="true" />
-          </column>
-          <column cols="5">
-            <label>b <span class="desc">( scale parameter )</span></label>
-            <input type="text" id="b" disabled="true" />
-          </column>
-          <column cols="5">
-            <label>rss <span class="desc">( residual sum of squares )</span></label>
-            <input type="text" id="rss" disabled="true" />
-          </column>
-        </row>
-      </fieldset>
-      <div id="draw-area" class="area"><div id="chart"></div></div>
-    </div>
-  </div>
-
-  <script src="./vendor/d3/d3.js" charset="utf-8"></script>
-  <script src="./vendor/c3-0.4.10/c3.js" charset="utf-8"></script>
+  <script src="bower_components/d3/d3.min.js" charset="utf-8"></script>
+  <script src="bower_components/c3/c3.min.js" charset="utf-8"></script>
+  <script src="bower_components/jquery/dist/jquery.min.js" charset="utf-8"></script>
+  <!-- jQuery を追加 -->
   <script>
-    var main = function() {
+    $(function(){
 
-      var calc = function() {
-        reset();
+      $('#calc').click(function(e) {
+        e.preventDefault();
+        before();
+        calc();
+        draw();
+        after();
+      });
+
+      function before() {
+        $('.alert').hide();
+        $('#result').hide();
+        $('#calc').attr('disabled', true);
+      }
+
+      function after() {
+        $('#result').show();
+        $('#calc').attr('disabled', false);
+      }
+
+      function calc() {
 
         if (!document.forms[0].checkValidity()) {
-          d3.select('.alert').text('Input value is invalid. Please re-check the values.').style('display', 'block');
+          d3.select('.alert').text('Input value is invalid. Please check the values.').style('display', 'block');
           return;
         }
 
-        var a_start = document.getElementById("a-start").value-0;
-        var a_end = document.getElementById("a-end").value-0;
-        var a_step = document.getElementById("a-step").value-0;
-        var b_start = document.getElementById("b-start").value-0;
-        var b_end = document.getElementById("b-end").value-0;
-        var b_step = document.getElementById("b-step").value-0;
+        var k_start = $('#k-start').val()-0;
+        var k_end = $('#k-end').val()-0;
+        var k_step = $('#k-step').val()-0;
+        var r_start = $('#r-start').val()-0;
+        var r_end = $('#r-end').val()-0;
+        var r_step = $('#r-step').val()-0;
 
 
         // get rawdata
-        var rawdata = d3.csv.parseRows(document.getElementById("rawdata").value.replace(/\t/g, ","), function(d) {
+        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d) {
           return {'x': d[0].trim()-0, 'y': d[1].trim()-0};
         });
 
         // fitting
-        var result = {'a': 0, 'b': 0, 'rss': 99999};
-        for(var a = a_start; a <= a_end; a += a_step) {
-          for(var b = b_start; b <= b_end; b += a_step) {
+        var result = {'k': 0, 'r': 0, 'rss': 99999};
+        for(var k = k_start; k <= k_end; k += k_step) {
+          for(var r = r_start; r <= r_end; r += k_step) {
             var rss = 0;
             d3.values(rawdata).forEach(function(data){
-              rss += Math.pow(data.y - calcWeibull(a,b,data.x), 2);
+              rss += Math.pow(data.y - calcWeibull(k, r, data.x), 2);
             });
             if (rss < result.rss) {
-              result = {'a': a, 'b': b, 'rss': rss};
+              result = {'k': k, 'r': r, 'rss': rss};
             }
           }
         }
 
-        // show results
-        d3.select('#a').attr('value', round(result.a));
-        d3.select('#b').attr('value', round(result.b));
-        d3.select('#rss').attr('value', round(result.rss));
-        d3.select('#result').style('display', 'block');
+        // set results
+        $('#k').val(round(result.k));
+        $('#r').val(round(result.r));
+        $('#rss').val(round(result.rss));
 
-        // draw chart
-        draw();
       };
 
       function draw() {
 
         // get line chart data
-        var a = document.getElementById("a").value-0;
-        var b = document.getElementById("b").value-0;
+        var k = $('#k').val()-0;
+        var r = $('#r').val()-0;
         var calc_x = [];
         var calc_y = [];
         for (var x = 0, i = 0; x <= 5; x += 0.1, i++) {
           calc_x[i] = round(x);
-          calc_y[i] = round(calcWeibull(a, b, x));
+          calc_y[i] = round(calcWeibull(k, r, x));
         }
 
         // get plot data
         var x = [], y = [];
-        var rawdata = d3.csv.parseRows(document.getElementById("rawdata").value.replace(/\t/g, ","), function(d, i) {
+        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d, i) {
           x[i] = round(d[0].trim());
           y[i] = round(d[1].trim());
         });
@@ -198,31 +132,114 @@
 
       };
 
-      function calcWeibull(a, b, x) {
+      function calcWeibull(k, r, x) {
         if (x <= 0) {
           return 0;
         } else {
-          return a/b * Math.pow(x/b, a-1) * Math.exp(-Math.pow(x/b, a));
+          return k/r * Math.pow(x/r, k-1) * Math.exp(-Math.pow(x/r, k));
         }
       };
-      return {"calc": calc};
-
-      function reset() {
-        d3.select('.alert').style('display', 'none');
-        d3.select('#result').style('display', 'none');
-        d3.select('#a').attr('value', '');
-        d3.select('#b').attr('value', '');
-        d3.select('#rss').attr('value', '');
-      }
 
       function round(value, digit) {
         var num = Math.pow(10, (!!digit || 3));
         return Math.round(value * num) / num;
       }
 
-    }();
-
+    });
   </script>
+
+</head>
+<body>
+  <div class="wrap content">
+    <h1>Weibull Distribution Fitting</h1>
+    <form class="forms">
+      <row>
+        <column cols="5">
+          <h5>Raw Datas<span class="desc">( CSV or TSV format )</span></h5>
+          <textarea id="rawdata" rows="10" required>
+0.1, 0.19
+0.2, 0.28
+0.3, 0.44
+0.4, 0.78
+0.5, 0.67
+0.6, 0.73
+0.7, 0.65
+0.8, 0.64
+0.9, 0.60
+1.0, 0.50
+1.3, 0.30
+1.5, 0.05</textarea>
+        </column>
+        <column cols="10">
+          <h5>Calculation Settings</h5>
+          <fieldset>
+            <legend>k <span class="desc">( shape parameter )</span></legend>
+            <row>
+              <column cols="5">
+                <label>start <span class="desc">( >0 )</span></label>
+                <input type="text" id="k-start" value="0.1" pattern="^[0-9\.]*$" required/>
+              </column>
+              <column cols="5">
+                <label>end <span class="desc">( >0 )</span></label>
+                <input type="text" id="k-end" value="5" pattern="^[0-9\.]*$" required/>
+              </column>
+              <column cols="5">
+                <label>step <span class="desc">( >0 )</span></label>
+                <input type="text" id="k-step" value="0.01" pattern="^[0-9\.]*$" required/>
+              </column>
+            </row>
+          </fieldset>
+          <fieldset>
+            <legend>λ <span class="desc">( scale parameter )</span></legend>
+            <row>
+              <column cols="5">
+                <label>start <span class="desc">( >0 )</span></label>
+                <input type="text" id="r-start" value="0.1" pattern="^[0-9\.]*$" required/>
+              </column>
+              <column cols="5">
+                <label>end <span class="desc">( >0 )</span></label>
+                <input type="text" id="r-end" value="5" pattern="^[0-9\.]*$" required/>
+              </column>
+              <column cols="5">
+                <label>step <span class="desc">( >0 )</span></label>
+                <input type="text" id="r-step" value="0.01" pattern="^[0-9\.]*$" required/>
+              </column>
+            </row>
+          </fieldset>
+
+        </column>
+      </row>
+      <row>
+        <column cols="2">
+          <button type="primary" id="calc" round>Calculate</button>
+        </column>
+        <column cols="7">
+          <div class="alert alert-error" ></div>
+        </column>
+      </row>
+
+    </form>
+    <div id="result">
+    <h5>Result</h5>
+      <fieldset id="value-area">
+        <row>
+          <column cols="5">
+            <label>k <span class="desc">( shape parameter )</span></label>
+            <input type="text" id="k" disabled="true" />
+          </column>
+          <column cols="5">
+            <label>λ <span class="desc">( scale parameter )</span></label>
+            <input type="text" id="r" disabled="true" />
+          </column>
+          <column cols="5">
+            <label>RSS <span class="desc">( residual sum of squares )</span></label>
+            <input type="text" id="rss" disabled="true" />
+          </column>
+        </row>
+      </fieldset>
+      <div id="draw-area" class="area"><div id="chart"></div></div>
+    </div>
+  </div>
 </body>
 </html>
 
