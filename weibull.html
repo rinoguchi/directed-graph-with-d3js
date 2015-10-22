@@ -84,7 +84,7 @@
           for(var r = r_start; r <= r_end; r += k_step) {
             var rss = 0;
             d3.values(rawdata).forEach(function(data){
-              rss += Math.pow(data.y - calcWeibull(k, r, data.x) * rate, 2);
+              rss += Math.pow(data.y - calcWeibull(k, r, data.x, rate), 2);
             });
             if (rss < result.rss) {
               result = {'k': k, 'r': r, 'rss': rss};
@@ -138,11 +138,11 @@
 
       };
 
-      function calcWeibull(k, r, x) {
+      function calcWeibull(k, r, x, rate) {
         if (x <= 0) {
           return 0;
         } else {
-          return k/r * Math.pow(x/r, k-1) * Math.exp(-Math.pow(x/r, k));
+          return k/r * Math.pow(x/r, k-1) * Math.exp(-Math.pow(x/r, k)) * rate;
         }
       };
 
