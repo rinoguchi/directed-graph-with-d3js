@@ -104,11 +104,12 @@
         // get line chart data
         var k = $('#k').val()-0;
         var r = $('#r').val()-0;
+        var rate = $('#rate').val()-0;
         var calc_x = [];
         var calc_y = [];
         for (var x = 0, i = 0; x <= 5; x += 0.1, i++) {
           calc_x[i] = round(x);
-          calc_y[i] = round(calcWeibull(k, r, x));
+          calc_y[i] = round(calcWeibull(k, r, x, rate));
         }
 
         // get plot data
