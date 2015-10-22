@@ -41,6 +41,11 @@
         after();
       });
 
+      $('#draw').click(function(e) {
+        e.preventDefault();
+        draw();
+      });
+
       function before() {
         $('.alert').hide();
         $('#result').hide();
@@ -65,6 +70,7 @@
         var r_start = $('#r-start').val()-0;
         var r_end = $('#r-end').val()-0;
         var r_step = $('#r-step').val()-0;
+        var rate = $('#rate').val()-0;
 
 
         // get rawdata
@@ -78,7 +84,7 @@
           for(var r = r_start; r <= r_end; r += k_step) {
             var rss = 0;
             d3.values(rawdata).forEach(function(data){
-              rss += Math.pow(data.y - calcWeibull(k, r, data.x), 2);
+              rss += Math.pow(data.y - calcWeibull(k, r, data.x) * rate, 2);
             });
             if (rss < result.rss) {
               result = {'k': k, 'r': r, 'rss': rss};
@@ -156,7 +162,7 @@
       <row>
         <column cols="5">
           <h5>Raw Datas<span class="desc">( CSV or TSV format )</span></h5>
-          <textarea id="rawdata" rows="10" required>
+          <textarea id="rawdata" rows="13" required>
 0.1, 0.19
 0.2, 0.28
 0.3, 0.44
@@ -206,6 +212,10 @@
               </column>
             </row>
           </fieldset>
+          <fieldset>
+            <legend>Rate of magnification</legend>
+            <input type="text" id="rate" value="1.0" pattern="^[0-9\.]*$" required/>
+          </fieldset>
 
         </column>
       </row>
@@ -223,15 +233,15 @@
     <h5>Result</h5>
       <fieldset id="value-area">
         <row>
-          <column cols="5">
+          <column cols="4">
             <label>k <span class="desc">( shape parameter )</span></label>
             <input type="text" id="k" disabled="true" />
           </column>
-          <column cols="5">
+          <column cols="4">
             <label>λ <span class="desc">( scale parameter )</span></label>
             <input type="text" id="r" disabled="true" />
           </column>
-          <column cols="5">
+          <column cols="4">
             <label>RSS <span class="desc">( residual sum of squares )</span></label>
             <input type="text" id="rss" disabled="true" />
           </column>
