@@ -23,10 +23,19 @@ row {
 }
 
 fieldset {
-    padding: 0px 10px 10px 20px;
+    padding: 5px 10px 5px 20px;
     margin-bottom: 10px;
 }
 
 legend {
   text-transform: none;
+}
+
+pre {
+  line-height: 20px;
+  color: rgba(0,0,0,0.9);
+  overflow: auto;
+  background: rgba(0,0,0,0.03);
+  padding: 20px;
+  word-wrap: normal;
 }

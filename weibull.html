@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="css/common.css" />
 
   <!-- this page -->
+  <script type="text/javascript" src="bower_components/MathJax/MathJax.js?config=AM_HTMLorMML-full">
+  </script>
   <link href="bower_components/c3/c3.css" rel="stylesheet" type="text/css">
 
   <title>Weibull Distribution Fitting</title>
@@ -24,18 +26,66 @@
   #draw-area {
     background-color: white;
   }
+
+  input[type="text"] {
+    height: 30px;
+  }
   </style>
 
   <script src="bower_components/d3/d3.min.js" charset="utf-8"></script>
   <script src="bower_components/c3/c3.min.js" charset="utf-8"></script>
   <script src="bower_components/jquery/dist/jquery.min.js" charset="utf-8"></script>
-  <!-- jQuery を追加 -->
+  <script src="bower_components/urijs/src/URI.js" charset="utf-8"></script>
   <script>
     $(function(){
+
+      // mode取得
+      var uri = new URI(window.location.href);
+      var mode = uri.query(true).mode || 'one';
+      changeMode(mode);
+
+      function hideAll() {
+        $('.one').hide();
+        $('.second').hide();
+        $('.extra').hide();
+        $('#ex-one').hide();
+        $('#ex-one-extra').hide();
+        $('#ex-two-extra').hide();
+      }
+
+      function changeMode(mode) {
+        var samples = {
+          'one': '0,0\n0.3,1.098\n0.6,0.602\n0.9,0.331\n1.2,0.181\n1.5,0.1\n1.8,0.055\n2.1,0.03\n2.4,0.016\n2.7,0.009\n3,0.005',
+          'one-extra': '0  , 0\n0.3, 1.099\n0.6, 0.622\n0.9, 0.432\n1.2, 0.481\n1.5, 0.724\n1.8, 0.964\n2.1, 0.855\n2.4, 0.450\n2.7, 0.105\n3.0, 0.012',
+          'two-extra': '0  , 0\n0.3, 1.099\n0.6, 0.622\n0.9, 0.432\n1.2, 0.481\n1.5, 0.724\n1.8, 0.964\n2.1, 0.855\n2.4, 0.450\n2.7, 0.105\n3.0, 0.012'
+        };
+        hideAll();
+        if (mode === 'one') {
+          $('.one').show();
+          $('#ex-one').show();
+          $('#rawdata').val(samples[mode]).attr('rows', '8')
+        } else if (mode === 'one-extra') {
+          $('.one').show();
+          $('.extra').show();
+          $('#ex-one-extra').show();
+          $('#rawdata').val(samples[mode]).attr('rows', '21')
+        } else if (mode === 'two-extra') {
+          $('.one').show();
+          $('.second').show();
+          $('.extra').show();
+          $('#ex-two-extra').show();
+          $('#rawdata').val(samples[mode]).attr('rows', '30');
+        }
+      }
+
 
       $('#calc').click(function(e) {
         e.preventDefault();
         before();
+        if(!validate()) {
+          $('#calc').attr('disabled', false);
+          return false;
+        }
         calc();
         draw();
         after();
@@ -57,26 +107,26 @@
         $('#calc').attr('disabled', false);
       }
 
-      function calc() {
-
+      function validate() {
         if (!document.forms[0].checkValidity()) {
-          d3.select('.alert').text('Input value is invalid. Please check the values.').style('display', 'block');
-          return;
+          $('.alert').text('Input value is invalid. Please check the values.').show();
+          return false;
+        } else {
+          return true;
         }
+      }
 
-        var a_from = $('#a-from').val()-0;
-        var a_to = $('#a-to').val()-0;
-        var a_step = $('#a-step').val()-0;
-        var b_from = $('#b-from').val()-0;
-        var b_to = $('#b-to').val()-0;
-        var b_step = $('#b-step').val()-0;
-        var r_from = $('#r-from').val()-0;
-        var r_to = $('#r-to').val()-0;
-        var r_step = $('#r-step').val()-0;
-        var m_from = $('#m-from').val()-0;
-        var m_to = $('#m-to').val()-0;
-        var m_step = $('#m-step').val()-0;
-
+      function calc() {
+        // var s = {
+        //   'a1': {'from': $('#a1-from').val()-0, 'to': $('#a1-to').val()-0, 'step': $('#a1-step').val()-0},
+        //   'b1': {'from': $('#b1-from').val()-0, 'to': $('#b1-to').val()-0, 'step': $('#b1-step').val()-0},
+        //   'a2': {'from': $('#a2-from').val()-0, 'to': $('#a2-to').val()-0, 'step': $('#a2-step').val()-0},
+        //   'b2': {'from': $('#b2-from').val()-0, 'to': $('#b2-to').val()-0, 'step': $('#b2-step').val()-0},
+        //   'r': {'from': $('#r-from').val()-0, 'to': $('#r-to').val()-0, 'step': $('#r-step').val()-0},
+        //   'm': {'from': $('#m-from').val()-0, 'to': $('#m-to').val()-0, 'step': $('#m-step').val()-0},
+        //   'c': {'from': $('#c-from').val()-0, 'to': $('#c-to').val()-0, 'step': $('#c-step').val()-0}
+        // }
+        var s = getSettings();
 
         // get rawdata
         var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d) {
@@ -84,44 +134,43 @@
         });
 
         // fitting
-        var result = {'a': 0, 'b': 0, 'r': 0, 'm': 1, 'rss': 99999};
-        for(var m = m_from; m <= m_to; m += m_step) {
-          for(var r = r_from; r <= r_to; r += r_step) {
-            for(var a = a_from; a <= a_to; a += a_step) {
-              for(var b = b_from; b <= b_to; b += a_step) {
-                var rss = 0;
-                d3.values(rawdata).forEach(function(data){
-                  rss += Math.pow(data.y - calcWeibull(a, b, r, m, data.x), 2);
-                });
-                if (rss < result.rss) {
-                  result = {'a': a, 'b': b, 'r': r, 'm': m, 'rss': rss};
+        var result = {'a1': 0, 'b1': 0, 'a2': 0, 'b2':0, 'r': 0, 'm': 1, 'c':1, 'rss': 99999};
+        for(var m = s.m_from; m <= s.m_to; m += s.m_step) {
+          for(var r = s.r_from; r <= s.r_to; r += s.r_step) {
+            for(var a1 = s.a1_from; a1 <= s.a1_to; a1 += s.a1_step) {
+              for(var b1 = s.b1_from; b1 <= s.b1_to; b1 += s.b1_step) {
+                for(var a2 = s.a2_from; a2 <= s.a2_to; a2 += s.a2_step) {
+                  for(var b2 = s.b2_from; b2 <= s.b2_to; b2 += s.b2_step) {
+                    for(var c = s.c_from; c <= s.c_to; c += s.c_step) {
+                      var rss = 0;
+                      d3.values(rawdata).forEach(function(data){
+                        rss += Math.pow(data.y - calcWeibull(a1, b1, a2, b2, r, m, c, data.x), 2);
+                      });
+                      if (rss < result.rss) {
+                        result = {'a1': a1, 'b1': b1, 'a2': a2, 'b2': b2,'r': r, 'm': m, 'c': c, 'rss': rss};
+                      }
+                    }
+                  }
                 }
               }
             }
           }
         }
 
-        // set results
-        $('#a').val(round(result.a));
-        $('#b').val(round(result.b));
-        $('#r').val(round(result.r));
-        $('#m').val(round(result.m));
-        $('#rss').val(round(result.rss));
+        setResult(result);
 
       };
 
       function draw() {
 
         // get line chart data
-        var a = $('#a').val()-0;
-        var b = $('#b').val()-0;
-        var r = $('#r').val()-0;
-        var m = $('#m').val()-0;
-        var calc_x = [];
-        var calc_y = [];
-        for (var x = 0, i = 0; x <= 5; x += 0.1, i++) {
+        var s = getResult();
+        var calc_x = [], calc_y_1 = [], calc_y_2 = [], calc_y_all = [];
+        for (var x = 0, i = 0; x <= 3; x += 0.3, i++) {
           calc_x[i] = round(x);
-          calc_y[i] = round(calcWeibull(a, b, r, m, x));
+          calc_y_1[i] = round(calcWeibull(s.a1, s.b1, 0, s.b2, s.r, s.m, s.c, x));
+          calc_y_2[i] = round(calcWeibull(0, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
+          calc_y_all[i] = round(calcWeibull(s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
         }
 
         // get plot data
@@ -136,14 +185,18 @@
         var chart = c3.generate({
           data: {
             xs: {
-              'weibull curve': 'x1',
-              'rawdata': 'x2'
+              'rawdata': 'x0',
+              'probability-density-function': 'x1',
+              'first': 'x1',
+              'second': 'x1'
             },
             columns: [
+              ['x0'].concat(x),
               ['x1'].concat(calc_x),
-              ['weibull curve'].concat(calc_y),
-              ['x2'].concat(x),
               ['rawdata'].concat(y),
+              ['probability-density-function'].concat(calc_y_all),
+              ['first'].concat(calc_y_1),
+              ['second'].concat(calc_y_2),
             ],
             type: 'spline'
           }
@@ -151,17 +204,51 @@
 
       };
 
-      function calcWeibull(a, b, r, m, x) {
-        if (x <= 0) {
+      function calcWeibull(a1, b1, a2, b2, r, m, c, x) {
+        if (x-r <= 0) {
           return 0;
         } else {
-          return a/b * Math.pow((x-r)/b, a-1) * Math.exp(-Math.pow((x-r)/b, a)) * m ;
+          return (c * a1/b1 * Math.pow((x-r)/b1, a1-1) * Math.exp(-Math.pow((x-r)/b1, a1)) 
+            + (1 - c) * a2/b2 * Math.pow((x-r)/b2, a2-1) * Math.exp(-Math.pow((x-r)/b2, a2))) * m ;
         }
       };
 
       function round(value, digit) {
         var num = Math.pow(10, (!!digit || 3));
         return Math.round(value * num) / num;
+      }
+
+      var settings_params = ['a1_from','a1_to','a1_step','b1_from','b1_to','b1_step',
+                             'a2_from','a2_to','a2_step','b2_from','b2_to','b2_step',
+                             'r_from','r_to','r_step','r_from','r_to','r_step',
+                             'm_from','m_to','m_step','m_from','m_to','m_step',
+                             'c_from','c_to','c_step','c_from','c_to','c_step'
+                             ];
+      function setSettings(settings) {
+        $.each(settings_params, function(i, param) {
+          $('#' + param.replace('_','-')).val(round(settings[param]));          
+        });
+      }
+      function getSettings() {
+        var settings = {};
+        $.each(settings_params, function(i, param) {
+          settings[param] = $('#' + param.replace('_','-')).val()-0;
+        });
+        return settings;
+      }
+
+      var result_params = ['a1','b1','a2','b2','r','m','c','rss'];
+      function setResult(result) {
+        $.each(result_params, function(i, param) {
+          $('#' + param).val(round(result[param]));          
+        });
+      }
+      function getResult() {
+        var result = {};
+        $.each(result_params, function(i, param) {
+          result[param] = $('#' + param).val()-0;
+        });
+        return result;
       }
 
     });
@@ -171,93 +258,170 @@
 <body>
   <div class="wrap content">
     <h1>Weibull Distribution Fitting</h1>
+    <h4>Expression</h4>
+    <div id="ex-one">
+      <p class="lead">`f(x; a, b) = a/b(x/b)^(a-1)e^(-(x/b)^a)`</p>
+      <p style="padding-left: 20px;">
+        `a` : shape parameter<br/>
+        `b` : scale parameter
+      </p>
+    </div>
+    <div id="ex-one-extra">
+      <p class="lead">`f(x; a, b, r, m) = a/b((x-r)/b)^(a-1)e^(-((x-r)/b)^a)m`</p>
+      <p style="padding-left: 20px;">
+        `a` : shape parameter<br/>
+        `b` : scale parameter<br/>
+        `r` : location parameter. It shifts the graph to left or right.<br/>
+        `m` : magnification of vertical axis. It simply multiply the vertical axis values.
+      </p>
+    </div>
+    <div id="ex-two-extra">
+      <p class="lead">`f(x; a1, b1, a2, b2, r, m, c) = (c((a1)/(b1)((x-r)/(b1))^(a1-1)e^(-((x-r)/(b1))^(a1))) + (1-c)((a2)/(b2)((x-r)/(b2))^(a2-1)e^(-((x-r)/(b2))^(a2))))m`</p>
+      <p style="padding-left: 20px;">
+        `a1` : shape parameter of first component<br/>
+        `b1` : scale parameter of first component<br/>
+        `a2` : shape parameter of second component<br/>
+        `b2` : scale parameter of second component<br/>
+        `r` : location parameter. It shifts the graph to left or right.<br/>
+        `m` : magnification of vertical axis. It simply multiply the vertical axis values.<br/>
+        `c` : component ratio
+      </p>
+    </div>
     <form class="forms">
       <row>
         <column cols="5">
           <h5>Raw Datas<span class="desc">( CSV or TSV format )</span></h5>
-          <textarea id="rawdata" rows="18" required>
-0.1, 0.1
-0.2, 0.28
-0.3, 0.44
-0.4, 0.7
-0.5, 0.82
-0.6, 0.85
-0.7, 0.8
-0.8, 0.7
-0.9, 0.60
-1.0, 0.50
-1.3, 0.2
-1.5, 0.05</textarea>
+          <textarea id="rawdata" rows="18" required></textarea>
         </column>
         <column cols="10">
           <h5>Calculation Settings</h5>
-          <fieldset>
-            <legend>a <span class="desc">( shape parameter )</span></legend>
-            <row>
-              <column cols="5">
-                <label>from <span class="desc">( >0 )</span></label>
-                <input type="text" id="a-from" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>to <span class="desc">( >0 )</span></label>
-                <input type="text" id="a-to" value="5" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>step <span class="desc">( >0 )</span></label>
-                <input type="text" id="a-step" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-            </row>
+          <fieldset class="first">
+            <legend>first component</span></legend>
+            <fieldset>
+              <legend>`a1` <span class="desc">( shape parameter )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a1-from" value="0.8" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a1-to" value="1.2" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a1-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
+            <fieldset>
+              <legend>`b1` <span class="desc">( scale parameter )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b1-from" value="0.4" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b1-to" value="0.6" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b1-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
           </fieldset>
-          <fieldset>
-            <legend>b <span class="desc">( scale parameter )</span></legend>
-            <row>
-              <column cols="5">
-                <label>from <span class="desc">( >0 )</span></label>
-                <input type="text" id="b-from" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>to <span class="desc">( >0 )</span></label>
-                <input type="text" id="b-to" value="5" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>step <span class="desc">( >0 )</span></label>
-                <input type="text" id="b-step" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-            </row>
+          <fieldset class="second">
+            <legend>second component</span></legend>
+            <fieldset>
+              <legend>`a2` <span class="desc">( shape parameter )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a2-from" value="4.8" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a2-to" value="5.2" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="a2-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
+            <fieldset>
+              <legend>`b2` <span class="desc">( scale parameter )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b2-from" value="1.8" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b2-to" value="2.2" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="b2-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
           </fieldset>
-          <fieldset>
-            <legend>r <span class="desc">( location parameter )</span></legend>
-            <row>
-              <column cols="5">
-                <label>from <span class="desc"></span></label>
-                <input type="text" id="r-from" value="0" pattern="^[\-0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>to <span class="desc"></span></label>
-                <input type="text" id="r-to" value="0" pattern="^[\-0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>step <span class="desc">( >0 )</span></label>
-                <input type="text" id="r-step" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-            </row>
-          </fieldset>
-          <fieldset>
-            <legend>m <span class="desc">( magnification of vertical axis )</span></legend>
-            <row>
-              <column cols="5">
-                <label>from <span class="desc">( >0 )</span></label>
-                <input type="text" id="m-from" value="1" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>to <span class="desc">( >0 )</span></label>
-                <input type="text" id="m-to" value="1" pattern="^[0-9\.]*$" required/>
-              </column>
-              <column cols="5">
-                <label>step <span class="desc">( >0 )</span></label>
-                <input type="text" id="m-step" value="0.1" pattern="^[0-9\.]*$" required/>
-              </column>
-            </row>
+          <fieldset class="extra">
+            <legend>extra</span></legend>
+            <fieldset>
+              <legend>`r` <span class="desc">( location parameter )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc"></span></label>
+                  <input type="text" id="r-from" value="0" pattern="^[\-0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc"></span></label>
+                  <input type="text" id="r-to" value="0" pattern="^[\-0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="r-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
+            <fieldset>
+              <legend>`m` <span class="desc">( magnification of vertical axis )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="m-from" value="1.5" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="m-to" value="2.5" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="m-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
+            <fieldset>
+              <legend>`c` <span class="desc">( component ratio )</span></legend>
+              <row>
+                <column cols="5">
+                  <label>from <span class="desc">( >0 )</span></label>
+                  <input type="text" id="c-from" value="0" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>to <span class="desc">( >0 )</span></label>
+                  <input type="text" id="c-to" value="1" pattern="^[0-9\.]*$" required/>
+                </column>
+                <column cols="5">
+                  <label>step <span class="desc">( >0 )</span></label>
+                  <input type="text" id="c-step" value="0.1" pattern="^[0-9\.]*$" required/>
+                </column>
+              </row>
+            </fieldset>
           </fieldset>
 
         </column>
@@ -274,26 +438,43 @@
       <h5>Result</h5>
       <fieldset id="value-area">
         <row>
-          <column cols="2">
-            <label>a <span class="desc">( shape )</span></label>
-            <input type="text" id="a" disabled="true" />
+          <column cols="2" class="first">
+            <label>`a1`</label>
+            <input type="text" id="a1" disabled="true"  />
           </column>
-          <column cols="2">
-            <label>b <span class="desc">( scale )</span></label>
-            <input type="text" id="b" disabled="true" />
+          <column cols="2" class="first">
+            <label>`b1`</label>
+            <input type="text" id="b1" disabled="true"  />
           </column>
-          <column cols="2">
-            <label>r <span class="desc">( location )</span></label>
+          <column cols="2" class="second">
+            <label>`a2`</label>
+            <input type="text" id="a2" disabled="true" />
+          </column>
+          <column cols="2" class="second">
+            <label>`b2`</label>
+            <input type="text" id="b2" disabled="true" />
+          </column>
+          <column cols="2" class="extra">
+            <label>`r`</label>
             <input type="text" id="r" disabled="true" />
           </column>
-          <column cols="2">
-            <label>m <span class="desc">( magnification )</span></label>
+          <column cols="2" class="extra">
+            <label>`m`</label>
             <input type="text" id="m" disabled="true" />
           </column>
+          <column cols="2" class="extra">
+            <label>`c`</label>
+            <input type="text" id="c" disabled="true" />
+          </column>
           <column cols="2">
-            <label>RSS <span class="desc"></span></label>
+            <label>`RSS`</label>
             <input type="text" id="rss" disabled="true" />
           </column>
+          <!--
+          <column cols="2">
+            <button type="primary" id="draw" round>Draw</button>
+          </column>
+          -->
         </row>
       </fieldset>
       <div id="draw-area" class="area"><div id="chart"></div></div>

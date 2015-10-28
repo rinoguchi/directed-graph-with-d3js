@@ -4,7 +4,7 @@
   <!-- common -->
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="vendor/kube500/css/kube.css" />
+  <link rel="stylesheet" href="bower_components/kube500/css/kube.css" />
   <link rel="stylesheet" href="css/common.css" />
 
   <!-- this page -->
@@ -15,16 +15,19 @@
 <body>
   <div class="wrap content">
     <h1 class="title">Web Tools</h1>
-    <dl>
-      <dt><a href="./directed-graph.html">Directed Graph With d3.js</a></dt>
-      <dd>
-        Draw social graph with your csv or tsv datas.
-      </dd>
-      <dt><a href="./weibull.html">Weibll Distribution Fitting</a></dt>
-      <dd>
-        Search best fit distribution with your csv or tsv datas.
-      </dd>
-    </dl>
+    <h3>Directed Graph</h3>
+<pre>
+You can draw direcred graph, if you have csv data of nodes and link. <a href="./directed-graph.html">here</a>
+</pre>
+    <h3>Weibll Distribution Fitting</h3>
+<pre>
+You can search the best fitting parameters of weibull probability density function with your raw datas.
+There are three fitting modes.
+    1.<a href="./weibull.html?mode=one">simple fitting</a>
+    2.<a href="./weibull.html?mode=one-extra">fitting with extra params (location parameter and magnifivation paramter)</a>
+    3.<a href="./weibull.html?mode=two-extra">fitting with two end component</a>
+</pre>
+
   </div>
 </body>
 </html>
