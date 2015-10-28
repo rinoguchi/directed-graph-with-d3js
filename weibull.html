@@ -39,13 +39,47 @@
   <script>
     $(function(){
 
+      var settings_params = ['a1_from','a1_to','a1_step','b1_from','b1_to','b1_step',
+                             'a2_from','a2_to','a2_step','b2_from','b2_to','b2_step',
+                             'r_from','r_to','r_step','r_from','r_to','r_step',
+                             'm_from','m_to','m_step','m_from','m_to','m_step',
+                             'c_from','c_to','c_step','c_from','c_to','c_step'
+                             ];
+      var result_params = ['a1','b1','a2','b2','r','m','c','rss'];
+
+      function setSettings(settings) {
+        $.each(settings_params, function(i, param) {
+          $('#' + param.replace('_','-')).val(round(settings[param]));          
+        });
+      }
+      function getSettings() {
+        var settings = {};
+        $.each(settings_params, function(i, param) {
+          settings[param] = $('#' + param.replace('_','-')).val()-0;
+        });
+        return settings;
+      }
+
+      function setResult(result) {
+        $.each(result_params, function(i, param) {
+          $('#' + param).val(round(result[param]));          
+        });
+      }
+      function getResult() {
+        var result = {};
+        $.each(result_params, function(i, param) {
+          result[param] = $('#' + param).val()-0;
+        });
+        return result;
+      }
+
       // mode取得
       var uri = new URI(window.location.href);
       var mode = uri.query(true).mode || 'one';
       changeMode(mode);
 
       function hideAll() {
-        $('.one').hide();
+        $('.first').hide();
         $('.second').hide();
         $('.extra').hide();
         $('#ex-one').hide();
@@ -56,21 +90,35 @@
       function changeMode(mode) {
         var samples = {
           'one': '0,0\n0.3,1.098\n0.6,0.602\n0.9,0.331\n1.2,0.181\n1.5,0.1\n1.8,0.055\n2.1,0.03\n2.4,0.016\n2.7,0.009\n3,0.005',
-          'one-extra': '0  , 0\n0.3, 1.099\n0.6, 0.622\n0.9, 0.432\n1.2, 0.481\n1.5, 0.724\n1.8, 0.964\n2.1, 0.855\n2.4, 0.450\n2.7, 0.105\n3.0, 0.012',
+          'one-extra': '-0.6,0\n-0.3,1.098\n0.0,0.602\n0.3,0.331\n0.6,0.181\n0.9,0.1\n1.2,0.055\n1.5,0.03\n1.8,0.016\n2.1,0.009\n2.4,0.005',
           'two-extra': '0  , 0\n0.3, 1.099\n0.6, 0.622\n0.9, 0.432\n1.2, 0.481\n1.5, 0.724\n1.8, 0.964\n2.1, 0.855\n2.4, 0.450\n2.7, 0.105\n3.0, 0.012'
         };
         hideAll();
         if (mode === 'one') {
-          $('.one').show();
+          $('.first').show();
           $('#ex-one').show();
-          $('#rawdata').val(samples[mode]).attr('rows', '8')
+          $('#rawdata').val(samples[mode]).attr('rows', '8');
+          setSettings({
+            'a1_from': '0.8','a1_to': '1.2','a1_step': '0.1','b1_from': '0.4','b1_to': '0.6','b1_step': '0.1',
+            'a2_from': '0','a2_to': '0','a2_step': '0.1','b2_from': '1','b2_to': '1','b2_step': '0.1',
+            'r_from': '0','r_to': '0','r_step': '0.1',
+            'm_from': '1','m_to': '1','m_step': '0.1',
+            'c_from': '1','c_to': '1','c_step': '0.1'
+          });
         } else if (mode === 'one-extra') {
-          $('.one').show();
+          $('.first').show();
           $('.extra').show();
           $('#ex-one-extra').show();
           $('#rawdata').val(samples[mode]).attr('rows', '21')
+          setSettings({
+            'a1_from': '0.8','a1_to': '1.2','a1_step': '0.1','b1_from': '0.4','b1_to': '0.6','b1_step': '0.1',
+            'a2_from': '0','a2_to': '0','a2_step': '0.1','b2_from': '1','b2_to': '1','b2_step': '0.1',
+            'r_from': '-1','r_to': '1','r_step': '0.1',
+            'm_from': '1','m_to': '2','m_step': '0.1',
+            'c_from': '1','c_to': '1','c_step': '0.1'
+          });
         } else if (mode === 'two-extra') {
-          $('.one').show();
+          $('.first').show();
           $('.second').show();
           $('.extra').show();
           $('#ex-two-extra').show();
@@ -117,15 +165,7 @@
       }
 
       function calc() {
-        // var s = {
-        //   'a1': {'from': $('#a1-from').val()-0, 'to': $('#a1-to').val()-0, 'step': $('#a1-step').val()-0},
-        //   'b1': {'from': $('#b1-from').val()-0, 'to': $('#b1-to').val()-0, 'step': $('#b1-step').val()-0},
-        //   'a2': {'from': $('#a2-from').val()-0, 'to': $('#a2-to').val()-0, 'step': $('#a2-step').val()-0},
-        //   'b2': {'from': $('#b2-from').val()-0, 'to': $('#b2-to').val()-0, 'step': $('#b2-step').val()-0},
-        //   'r': {'from': $('#r-from').val()-0, 'to': $('#r-to').val()-0, 'step': $('#r-step').val()-0},
-        //   'm': {'from': $('#m-from').val()-0, 'to': $('#m-to').val()-0, 'step': $('#m-step').val()-0},
-        //   'c': {'from': $('#c-from').val()-0, 'to': $('#c-to').val()-0, 'step': $('#c-step').val()-0}
-        // }
+
         var s = getSettings();
 
         // get rawdata
@@ -161,17 +201,8 @@
 
       };
 
-      function draw() {
 
-        // get line chart data
-        var s = getResult();
-        var calc_x = [], calc_y_1 = [], calc_y_2 = [], calc_y_all = [];
-        for (var x = 0, i = 0; x <= 3; x += 0.3, i++) {
-          calc_x[i] = round(x);
-          calc_y_1[i] = round(calcWeibull(s.a1, s.b1, 0, s.b2, s.r, s.m, s.c, x));
-          calc_y_2[i] = round(calcWeibull(0, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
-          calc_y_all[i] = round(calcWeibull(s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
-        }
+      function draw() {
 
         // get plot data
         var x = [], y = [];
@@ -180,6 +211,15 @@
           y[i] = round(d[1].trim());
         });
 
+        // get line chart data
+        var s = getResult();
+        var calc_x = [], calc_y_1 = [], calc_y_2 = [], calc_y_all = [];
+        for (var x = s.r, i = 0; x <= 3; x += 0.1, i++) {
+          calc_x[i] = round(x);
+          calc_y_1[i] = round(calcWeibull(s.a1, s.b1, 0, s.b2, s.r, s.m, s.c, x));
+          calc_y_2[i] = round(calcWeibull(0, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
+          calc_y_all[i] = round(calcWeibull(s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
+        }
 
         // draw chart
         var chart = c3.generate({
@@ -199,13 +239,20 @@
               ['second'].concat(calc_y_2),
             ],
             type: 'spline'
+          },
+          axis: {
+            x: {
+              tick: {
+                format: function (x) { return x.toString(); }
+              }
+            }
           }
         });
 
       };
 
       function calcWeibull(a1, b1, a2, b2, r, m, c, x) {
-        if (x-r <= 0) {
+        if ((x - r) <= 0) {
           return 0;
         } else {
           return (c * a1/b1 * Math.pow((x-r)/b1, a1-1) * Math.exp(-Math.pow((x-r)/b1, a1)) 
@@ -216,39 +263,6 @@
       function round(value, digit) {
         var num = Math.pow(10, (!!digit || 3));
         return Math.round(value * num) / num;
-      }
-
-      var settings_params = ['a1_from','a1_to','a1_step','b1_from','b1_to','b1_step',
-                             'a2_from','a2_to','a2_step','b2_from','b2_to','b2_step',
-                             'r_from','r_to','r_step','r_from','r_to','r_step',
-                             'm_from','m_to','m_step','m_from','m_to','m_step',
-                             'c_from','c_to','c_step','c_from','c_to','c_step'
-                             ];
-      function setSettings(settings) {
-        $.each(settings_params, function(i, param) {
-          $('#' + param.replace('_','-')).val(round(settings[param]));          
-        });
-      }
-      function getSettings() {
-        var settings = {};
-        $.each(settings_params, function(i, param) {
-          settings[param] = $('#' + param.replace('_','-')).val()-0;
-        });
-        return settings;
-      }
-
-      var result_params = ['a1','b1','a2','b2','r','m','c','rss'];
-      function setResult(result) {
-        $.each(result_params, function(i, param) {
-          $('#' + param).val(round(result[param]));          
-        });
-      }
-      function getResult() {
-        var result = {};
-        $.each(result_params, function(i, param) {
-          result[param] = $('#' + param).val()-0;
-        });
-        return result;
       }
 
     });
@@ -405,7 +419,7 @@
                 </column>
               </row>
             </fieldset>
-            <fieldset>
+            <fieldset class="second">
               <legend>`c` <span class="desc">( component ratio )</span></legend>
               <row>
                 <column cols="5">
@@ -444,7 +458,7 @@
           </column>
           <column cols="2" class="first">
             <label>`b1`</label>
-            <input type="text" id="b1" disabled="true"  />
+            <input type="text" id="b1" disabled="true" />
           </column>
           <column cols="2" class="second">
             <label>`a2`</label>
@@ -462,7 +476,7 @@
             <label>`m`</label>
             <input type="text" id="m" disabled="true" />
           </column>
-          <column cols="2" class="extra">
+          <column cols="2" class="second">
             <label>`c`</label>
             <input type="text" id="c" disabled="true" />
           </column>
@@ -470,11 +484,11 @@
             <label>`RSS`</label>
             <input type="text" id="rss" disabled="true" />
           </column>
-          <!--
+          
           <column cols="2">
             <button type="primary" id="draw" round>Draw</button>
           </column>
-          -->
+          
         </row>
       </fieldset>
       <div id="draw-area" class="area"><div id="chart"></div></div>
