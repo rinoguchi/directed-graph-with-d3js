@@ -201,15 +201,7 @@
 
       };
 
-
       function draw() {
-
-        // get plot data
-        var x = [], y = [];
-        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d, i) {
-          x[i] = round(d[0].trim());
-          y[i] = round(d[1].trim());
-        });
 
         // get line chart data
         var s = getResult();
@@ -220,6 +212,13 @@
           calc_y_2[i] = round(calcWeibull(0, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
           calc_y_all[i] = round(calcWeibull(s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
         }
+
+        // get plot data
+        var x = [], y = [];
+        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d, i) {
+          x[i] = round(d[0].trim());
+          y[i] = round(d[1].trim());
+        });
 
         // draw chart
         var chart = c3.generate({
@@ -454,7 +453,7 @@
         <row>
           <column cols="2" class="first">
             <label>`a1`</label>
-            <input type="text" id="a1" disabled="true"  />
+            <input type="text" id="a1" disabled="true" />
           </column>
           <column cols="2" class="first">
             <label>`b1`</label>
@@ -484,11 +483,11 @@
             <label>`RSS`</label>
             <input type="text" id="rss" disabled="true" />
           </column>
-          
-<!--           <column cols="2">
+<!--           
+          <column cols="2">
             <button type="primary" id="draw" round>Draw</button>
-          </column> -->
-          
+          </column>
+           -->
         </row>
       </fieldset>
       <div id="draw-area" class="area"><div id="chart"></div></div>
