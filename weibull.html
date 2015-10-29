@@ -89,9 +89,9 @@
 
       function changeMode(mode) {
         var samples = {
-          'one': '0,0\n0.3,1.098\n0.6,0.602\n0.9,0.331\n1.2,0.181\n1.5,0.1\n1.8,0.055\n2.1,0.03\n2.4,0.016\n2.7,0.009\n3,0.005',
-          'one-extra': '-0.6,0\n-0.3,1.098\n0.0,0.602\n0.3,0.331\n0.6,0.181\n0.9,0.1\n1.2,0.055\n1.5,0.03\n1.8,0.016\n2.1,0.009\n2.4,0.005',
-          'two-extra': '0  , 0\n0.3, 1.099\n0.6, 0.622\n0.9, 0.432\n1.2, 0.481\n1.5, 0.724\n1.8, 0.964\n2.1, 0.855\n2.4, 0.450\n2.7, 0.105\n3.0, 0.012'
+          'one': '0,0\n0.3,0.001\n0.6,0.02\n0.9,0.101\n1.2,0.3\n1.5,0.624\n1.8,0.909\n2.1,0.848\n2.4,0.431\n2.7,0.094\n3,0.006',
+          'one-extra': '-1,0\n-0.9,0.38\n-0.7,1.07\n-0.5,1.63\n-0.3,1.75\n-0.1,1.64\n0.1,1.37\n0.3,0.90\n0.5,0.63\n0.7,0.4\n0.9,0.22',
+          'two-extra': '0  , 0\n0.1,1.64\n0.2,1.34\n0.3, 1.09\n0.6, 0.62\n0.9, 0.43\n1.2, 0.48\n1.5, 0.72\n1.8, 0.96\n2.1, 0.85\n2.4, 0.45\n2.7, 0.10\n3.0, 0.01'
         };
         hideAll();
         if (mode === 'one') {
@@ -99,7 +99,7 @@
           $('#ex-one').show();
           $('#rawdata').val(samples[mode]).attr('rows', '8');
           setSettings({
-            'a1_from': '0.8','a1_to': '1.2','a1_step': '0.1','b1_from': '0.4','b1_to': '0.6','b1_step': '0.1',
+            'a1_from': '4.5','a1_to': '5.5','a1_step': '0.1','b1_from': '1.5','b1_to': '2.5','b1_step': '0.1',
             'a2_from': '0','a2_to': '0','a2_step': '0.1','b2_from': '1','b2_to': '1','b2_step': '0.1',
             'r_from': '0','r_to': '0','r_step': '0.1',
             'm_from': '1','m_to': '1','m_step': '0.1',
@@ -109,12 +109,12 @@
           $('.first').show();
           $('.extra').show();
           $('#ex-one-extra').show();
-          $('#rawdata').val(samples[mode]).attr('rows', '21')
+          $('#rawdata').val(samples[mode]).attr('rows', '18')
           setSettings({
-            'a1_from': '0.8','a1_to': '1.2','a1_step': '0.1','b1_from': '0.4','b1_to': '0.6','b1_step': '0.1',
+            'a1_from': '1.8','a1_to': '2.2','a1_step': '0.1','b1_from': '0.8','b1_to': '1.2','b1_step': '0.1',
             'a2_from': '0','a2_to': '0','a2_step': '0.1','b2_from': '1','b2_to': '1','b2_step': '0.1',
-            'r_from': '-1','r_to': '1','r_step': '0.1',
-            'm_from': '1','m_to': '2','m_step': '0.1',
+            'r_from': '-1.3','r_to': '-0.7','r_step': '0.1',
+            'm_from': '1.8','m_to': '2.2','m_step': '0.1',
             'c_from': '1','c_to': '1','c_step': '0.1'
           });
         } else if (mode === 'two-extra') {
@@ -175,13 +175,13 @@
 
         // fitting
         var result = {'a1': 0, 'b1': 0, 'a2': 0, 'b2':0, 'r': 0, 'm': 1, 'c':1, 'rss': 99999};
-        for(var m = s.m_from; m <= s.m_to; m += s.m_step) {
-          for(var r = s.r_from; r <= s.r_to; r += s.r_step) {
-            for(var a1 = s.a1_from; a1 <= s.a1_to; a1 += s.a1_step) {
-              for(var b1 = s.b1_from; b1 <= s.b1_to; b1 += s.b1_step) {
-                for(var a2 = s.a2_from; a2 <= s.a2_to; a2 += s.a2_step) {
-                  for(var b2 = s.b2_from; b2 <= s.b2_to; b2 += s.b2_step) {
-                    for(var c = s.c_from; c <= s.c_to; c += s.c_step) {
+        for(var m = s.m_from; m <= s.m_to; m = round(m+s.m_step)) {
+          for(var r = s.r_from; r <= s.r_to; r = round(r+s.r_step)) {
+            for(var a1 = s.a1_from; a1 <= s.a1_to; a1 = round(a1+s.a1_step)) {
+              for(var b1 = s.b1_from; b1 <= s.b1_to; b1 = round(b1+s.b1_step)) {
+                for(var a2 = s.a2_from; a2 <= s.a2_to; a2 = round(a2+s.a2_step)) {
+                  for(var b2 = s.b2_from; b2 <= s.b2_to; b2 = round(b2+s.b2_step)) {
+                    for(var c = s.c_from; c <= s.c_to; c = round(c+s.c_step)) {
                       var rss = 0;
                       d3.values(rawdata).forEach(function(data){
                         rss += Math.pow(data.y - calcWeibull(a1, b1, a2, b2, r, m, c, data.x), 2);
@@ -203,40 +203,43 @@
 
       function draw() {
 
+        // get plot data
+        var raw_x = [], raw_y = [];
+        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d, i) {
+          raw_x[i] = round(d[0].trim());
+          raw_y[i] = round(d[1].trim());
+        });
+
         // get line chart data
         var s = getResult();
         var calc_x = [], calc_y_1 = [], calc_y_2 = [], calc_y_all = [];
-        for (var x = s.r, i = 0; x <= 3; x += 0.1, i++) {
+        for (var x = raw_x[0], i = 0; x <= raw_x[raw_x.length-1]; x = round(x + 0.1), i++) {
           calc_x[i] = round(x);
           calc_y_1[i] = round(calcWeibull(s.a1, s.b1, 0, s.b2, s.r, s.m, s.c, x));
           calc_y_2[i] = round(calcWeibull(0, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
           calc_y_all[i] = round(calcWeibull(s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c, x));
         }
 
-        // get plot data
-        var x = [], y = [];
-        var rawdata = d3.csv.parseRows($('#rawdata').val().replace(/\t/g, ','), function(d, i) {
-          x[i] = round(d[0].trim());
-          y[i] = round(d[1].trim());
-        });
-
         // draw chart
         var chart = c3.generate({
           data: {
             xs: {
               'rawdata': 'x0',
-              'probability-density-function': 'x1',
+              'calculated-by-the-expression': 'x1',
               'first': 'x1',
               'second': 'x1'
             },
             columns: [
-              ['x0'].concat(x),
+              ['x0'].concat(raw_x),
               ['x1'].concat(calc_x),
-              ['rawdata'].concat(y),
-              ['probability-density-function'].concat(calc_y_all),
+              ['rawdata'].concat(raw_y),
+              ['calculated-by-the-expression'].concat(calc_y_all),
               ['first'].concat(calc_y_1),
               ['second'].concat(calc_y_2),
             ],
+            types: {
+              rawdata: 'scatter'
+            },
             type: 'spline'
           },
           axis: {
@@ -245,8 +248,19 @@
                 format: function (x) { return x.toString(); }
               }
             }
+          },
+          point: {
+            show: false,
+            r: 5
           }
         });
+
+        // chart hide by mode
+        var mode = uri.query(true).mode || 'one';
+        if (mode === 'one' || mode === 'one-extra') {
+          chart.hide('first');
+          chart.hide('second');
+        }
 
       };
 
