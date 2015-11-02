@@ -128,6 +128,7 @@
 
 
       $('#calc').click(function(e) {
+        //console.time('timer1');
         e.preventDefault();
         before();
         if(!validate()) {
@@ -137,6 +138,12 @@
         calc();
         draw();
         after();
+        //console.timeEnd('timer1');
+      });
+
+      $('#copy').click(function(e) {
+        e.preventDefault();
+        copy();
       });
 
       $('#draw').click(function(e) {
@@ -276,6 +283,12 @@
       function round(value, digit) {
         var num = Math.pow(10, (!!digit || 3));
         return Math.round(value * num) / num;
+      }
+
+      function copy() {
+        var s = getResult();
+        var memo = $('#memo');
+        memo.val(memo.val() + [s.a1, s.b1, s.a2, s.b2, s.r, s.m, s.c].join('\t') + '\n');
       }
 
     });
@@ -462,50 +475,53 @@
         </column>
       </row>
       <div id="result">
-      <h5>Result</h5>
-      <fieldset id="value-area">
-        <row>
-          <column cols="2" class="first">
-            <label>`a1`</label>
-            <input type="text" id="a1" disabled="true" />
-          </column>
-          <column cols="2" class="first">
-            <label>`b1`</label>
-            <input type="text" id="b1" disabled="true" />
-          </column>
-          <column cols="2" class="second">
-            <label>`a2`</label>
-            <input type="text" id="a2" disabled="true" />
-          </column>
-          <column cols="2" class="second">
-            <label>`b2`</label>
-            <input type="text" id="b2" disabled="true" />
-          </column>
-          <column cols="2" class="extra">
-            <label>`r`</label>
-            <input type="text" id="r" disabled="true" />
-          </column>
-          <column cols="2" class="extra">
-            <label>`m`</label>
-            <input type="text" id="m" disabled="true" />
-          </column>
-          <column cols="2" class="second">
-            <label>`c`</label>
-            <input type="text" id="c" disabled="true" />
-          </column>
-          <column cols="2">
-            <label>`RSS`</label>
-            <input type="text" id="rss" disabled="true" />
-          </column>
-<!--           
-          <column cols="2">
-            <button type="primary" id="draw" round>Draw</button>
-          </column>
-           -->
-        </row>
-      </fieldset>
-      <div id="draw-area" class="area"><div id="chart"></div></div>
-    </div>
+        <h5>Result</h5>
+        <fieldset id="value-area">
+          <row>
+            <column cols="2" class="first">
+              <label>`a1`</label>
+              <input type="text" id="a1" disabled="true" />
+            </column>
+            <column cols="2" class="first">
+              <label>`b1`</label>
+              <input type="text" id="b1" disabled="true" />
+            </column>
+            <column cols="2" class="second">
+              <label>`a2`</label>
+              <input type="text" id="a2" disabled="true" />
+            </column>
+            <column cols="2" class="second">
+              <label>`b2`</label>
+              <input type="text" id="b2" disabled="true" />
+            </column>
+            <column cols="2" class="extra">
+              <label>`r`</label>
+              <input type="text" id="r" disabled="true" />
+            </column>
+            <column cols="2" class="extra">
+              <label>`m`</label>
+              <input type="text" id="m" disabled="true" />
+            </column>
+            <column cols="2" class="second">
+              <label>`c`</label>
+              <input type="text" id="c" disabled="true" />
+            </column>
+            <column cols="2">
+              <label>`RSS`</label>
+              <input type="text" id="rss" disabled="true" />
+            </column>
+  <!--           
+            <column cols="2">
+              <button type="primary" id="draw" round>Draw</button>
+            </column>
+             -->
+          </row>
+        </fieldset>
+        <div id="draw-area" class="area"><div id="chart"></div></div>
+        <br/>
+        <h5>Memo<button id="copy" style="margin-left:10px" round small>Copy To Memo</button></h5>
+        <textarea id="memo" rows="7"></textarea>
+      </div>
     </form>
   </div>
 </body>
