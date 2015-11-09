@@ -47,6 +47,17 @@
                              ];
       var result_params = ['a1','b1','a2','b2','r','m','c','rss'];
 
+      // modeにより表示変更
+      var uri = new URI(window.location.href);
+      var mode = uri.query(true).mode || 'one';
+      changeMode(mode);
+
+      // debug表示
+      var debug = uri.query(true).debug || false;
+      if (debug) {
+        $('.debug').removeAttr('disabled').show();
+      }
+
       function setSettings(settings) {
         $.each(settings_params, function(i, param) {
           $('#' + param.replace('_','-')).val(round(settings[param]));          
@@ -72,11 +83,6 @@
         });
         return result;
       }
-
-      // mode取得
-      var uri = new URI(window.location.href);
-      var mode = uri.query(true).mode || 'one';
-      changeMode(mode);
 
       function hideAll() {
         $('.first').hide();
@@ -480,41 +486,41 @@
           <row>
             <column cols="2" class="first">
               <label>`a1`</label>
-              <input type="text" id="a1" disabled="true" />
+              <input type="text" id="a1" class="debug" disabled="true" />
             </column>
             <column cols="2" class="first">
               <label>`b1`</label>
-              <input type="text" id="b1" disabled="true" />
+              <input type="text" id="b1" class="debug" disabled="true" />
             </column>
             <column cols="2" class="second">
               <label>`a2`</label>
-              <input type="text" id="a2" disabled="true" />
+              <input type="text" id="a2" class="debug" disabled="true" />
             </column>
             <column cols="2" class="second">
               <label>`b2`</label>
-              <input type="text" id="b2" disabled="true" />
+              <input type="text" id="b2" class="debug" disabled="true" />
             </column>
             <column cols="2" class="extra">
               <label>`r`</label>
-              <input type="text" id="r" disabled="true" />
+              <input type="text" id="r" class="debug" disabled="true" />
             </column>
             <column cols="2" class="extra">
               <label>`m`</label>
-              <input type="text" id="m" disabled="true" />
+              <input type="text" id="m" class="debug" disabled="true" />
             </column>
             <column cols="2" class="second">
               <label>`c`</label>
-              <input type="text" id="c" disabled="true" />
+              <input type="text" id="c" class="debug" disabled="true" />
             </column>
             <column cols="2">
               <label>`RSS`</label>
-              <input type="text" id="rss" disabled="true" />
+              <input type="text" id="rss" class="debug" disabled="true" />
             </column>
-  <!--           
-            <column cols="2">
+           
+            <column cols="2" class="debug" style="display:none;">
               <button type="primary" id="draw" round>Draw</button>
             </column>
-             -->
+            
           </row>
         </fieldset>
         <div id="draw-area" class="area"><div id="chart"></div></div>
